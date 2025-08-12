@@ -1,111 +1,127 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../providers/auth_provider.dart';
 
-
 class TopNavbar extends StatelessWidget {
-  // const TopNavbar({super.key});
-  // final bool isLoggedIn;
   final VoidCallback onLoginPressed;
-    const TopNavbar({
+  const TopNavbar({
     super.key,
-    // required this.isLoggedIn,
     required this.onLoginPressed,
   });
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final Color bgColor = const Color(0xFFF2F4F8); // theme appBar background
+
+    final Color bgColor = const Color(0xFFF2F4F8);
     final Color borderColor = const Color(0xFFE5E6EC);
-    final Color iconColor = const Color(0xFF2C3E50); // dark neutral
-    final Color blue = const Color(0xFF0078D7); // primary
-    final Color accentRed = const Color(0xFFFF4A5B); // secondary
+    final Color blue = const Color(0xFF0078D7);
+    final Color accentRed = const Color(0xFFFF4A5B);
     final Color textColor = const Color(0xFF2C3E50);
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border(bottom: BorderSide(color: borderColor, width: 1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isSmall = constraints.maxWidth < 900;
+        bool isTiny = constraints.maxWidth < 600;
+
+        return Container(
+          height: isTiny ? 48 : 56,
+          padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 32),
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Left: Cloud icon with green check
-          _CloudSync(iconColor: blue),
-          const SizedBox(width: 16),
-          // Sync button
-          _SyncButton(blue: blue, accentRed: accentRed),
-          const Spacer(),
-          // Center: Search bar
-          _SearchBar(
-            blue: blue,
-            textColor: textColor,
-            borderColor: borderColor,
-          ),
-          const Spacer(),
-          // Right: Profile or Login
-          if (!auth.isLoggedIn)
-            SizedBox(
-              height: 40,
-              child: ElevatedButton(
-                // onPressed: () => auth.login(),
+          child: Row(
+            children: [
+              // Left section
+              _CloudSync(iconColor: blue),
+              if (!isTiny) const SizedBox(width: 16),
+              if (!isTiny) _SyncButton(blue: blue, accentRed: accentRed),
+
+              // Middle section (Search Bar centered)
+              Expanded(
+                child: Center(
+                  child: !isSmall
+                      ? SizedBox(
+                    width: 340,
+                    child: _SearchBar(
+                      blue: blue,
+                      textColor: textColor,
+                      borderColor: borderColor,
+                    ),
+                  )
+                      : const SizedBox(),
+                ),
+              ),
+
+              // Right section (Login/Profile)
+              if (!auth.isLoggedIn)
+                SizedBox(
+                  height: isTiny ? 32 : 40,
+                  child: ElevatedButton(
                     onPressed: onLoginPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: blue,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: blue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTiny ? 12 : 24,
+                      ),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.login_rounded, size: 20),
+                        if (!isTiny) const SizedBox(width: 6),
+                        if (!isTiny) const Text("Login"),
+                      ],
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.login_rounded, size: 20),
-                    SizedBox(width: 6),
-                    Text("Login"),
-                  ],
-                ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: PopupMenuButton<String>(
-                icon: const CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Color(0xFF0078D7),
-                  child: Icon(Icons.person, color: Colors.white),
-                ),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: "profile",
-                    child: Text("View Profile"),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: PopupMenuButton<String>(
+                    icon: const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Color(0xFF0078D7),
+                      child: Icon(Icons.person, color: Colors.white),
+                    ),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: "profile",
+                        child: Text("View Profile"),
+                      ),
+                      const PopupMenuItem(
+                        value: "settings",
+                        child: Text("Settings"),
+                      ),
+                      const PopupMenuItem(
+                          value: "logout", child: Text("Logout")),
+                    ],
+                    onSelected: (value) {
+                      if (value == "logout") {
+                        auth.logout();
+                      }
+                    },
                   ),
-                  const PopupMenuItem(
-                    value: "settings",
-                    child: Text("Settings"),
-                  ),
-                  const PopupMenuItem(value: "logout", child: Text("Logout")),
-                ],
-                onSelected: (value) {
-                  if (value == "logout") {
-                    auth.logout();
-                  }
-                },
-              ),
-            ),
-        ],
-      ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -113,6 +129,7 @@ class TopNavbar extends StatelessWidget {
 class _CloudSync extends StatelessWidget {
   final Color iconColor;
   const _CloudSync({this.iconColor = const Color(0xFF0078D7)});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -142,6 +159,7 @@ class _SyncButton extends StatelessWidget {
   final Color blue;
   final Color accentRed;
   const _SyncButton({required this.blue, required this.accentRed});
+
   @override
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
@@ -170,6 +188,7 @@ class _SearchBar extends StatefulWidget {
     required this.textColor,
     required this.borderColor,
   });
+
   @override
   State<_SearchBar> createState() => _SearchBarState();
 }
@@ -205,7 +224,6 @@ class _SearchBarState extends State<_SearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 340,
       height: 40,
       decoration: BoxDecoration(
         color: Colors.white,
